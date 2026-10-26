@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Footing Bearing Capacity Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f3;--card:#fff;--ink:#1f2a24;--mute:#5d6b63;--line:#d9e0da;--acc:#2f6b4f;--accbg:#e3f0e9;--warn:#8a5a00;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a17;--card:#1c2420;--ink:#e6ede8;--mute:#9aaaa0;--line:#2e3a33;--acc:#6fcf9f;--accbg:#223229;--warn:#e0b252;color-scheme:dark}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,Arial,sans-serif;line-height:1.5}
+header{padding:28px 20px 8px;max-width:1050px;margin:auto}
+h1{font-family:'Merriweather',Georgia,serif;font-size:1.6rem;margin:0 0 4px}
+header p{margin:0;color:var(--mute)}
+main{max-width:1050px;margin:auto;padding:16px 20px 40px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:800px){main{grid-template-columns:1fr}}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+h2{font-size:1rem;margin:0 0 10px;color:var(--acc);text-transform:uppercase;letter-spacing:.05em}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:.82rem;color:var(--mute);font-weight:600}
+input,select{width:100%;margin-top:3px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+.full{grid-column:1/-1}
+.check{display:flex;gap:8px;align-items:center}.check input{width:auto;margin:0}
+button{background:var(--acc);color:var(--card);border:0;border-radius:8px;padding:11px 18px;font:inherit;font-weight:700;cursor:pointer;width:100%}
+.big{font-size:2rem;font-weight:700;font-family:'Merriweather',Georgia,serif}
+.chip{background:var(--accbg);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.chip small{display:block;color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+.note{font-size:.85rem;color:var(--warn)}
+ul{margin:6px 0 0;padding-left:18px;font-size:.9rem}
+.f{font-family:Georgia,serif;background:var(--bg);padding:8px 10px;border-radius:6px;font-size:.88rem;overflow-x:auto;white-space:nowrap}
+.err{color:#c0392b;font-weight:600}
+svg text{fill:var(--ink);font-family:'Nunito',sans-serif;font-size:11px}.soil{fill:var(--accbg)}.ftg{fill:var(--acc)}.bar{fill:var(--acc)}.bar2{fill:var(--mute)}.proj{font-size:.85rem;color:var(--mute);margin:0 0 10px}
+</style>
+</head>
+<body>
+<header>
+<h1>Footing Bearing Capacity Calculator</h1>
+<p>Terzaghi’s theory for shallow foundations · general and local shear</p>
+</header>
+<main>
+<div>
+<section style="margin-bottom:18px">
+<h2>Project details</h2>
+<div class="grid">
+<label class="full">Project name<input id="pn" type="text" placeholder="e.g. Library block foundation"></label>
+<label>Client<input id="pc" type="text"></label>
+<label>Engineer<input id="pe" type="text"></label>
+</div>
+</section>
+<section>
+<h2>1 · Soil data</h2>
+<div class="grid">
+<label>Cohesion c (kPa)<input id="c" type="number" value="20" step="any"></label>
+<label>Friction angle φ (°)<input id="phi" type="number" value="28" step="any"></label>
+<label>Unit weight γ (kN/m³)<input id="g" type="number" value="18" step="any"></label>
+<label>Factor of safety<input id="fs" type="number" value="3" step="any"></label>
+<label class="full">Water table depth Dw (m) – leave blank if deep<input id="dw" type="number" step="any"></label>
+<label class="check full"><input id="usespt" type="checkbox"> Estimate φ from SPT N (φ = 27.1 + 0.3N − 0.00054N²)</label>
+<label class="full">Corrected SPT N<input id="spt" type="number" value="15" step="any"></label>
+</div>
+</section>
+<section style="margin-top:18px">
+<h2>2 · Footing data</h2>
+<div class="grid">
+<label>Width B (m)<input id="B" type="number" value="2" step="any"></label>
+<label>Length L (m) – blank = strip<input id="L" type="number" value="2" step="any"></label>
+<label>Depth Df (m)<input id="Df" type="number" value="1.5" step="any"></label>
+<label>Failure mode<select id="mode"><option value="g">General shear</option><option value="l">Local shear</option></select></label>
+</div>
+<p style="margin:12px 0 4px;font-size:.85rem;color:var(--mute)">Optional: enter all three factors to override the table values.</p>
+<div class="grid" style="grid-template-columns:repeat(3,1fr)">
+<label>Nc<input id="onc" type="number" step="any"></label>
+<label>Nq<input id="onq" type="number" step="any"></label>
+<label>Nγ<input id="ong" type="number" step="any"></label>
+</div>
+<div style="margin-top:14px"><button onclick="calc()">Calculate</button></div>
+</section>
+</div>
+<div>
+<section>
+<h2>3 · Results</h2>
+<div id="out"><p style="color:var(--mute)">Press Calculate to see results.</p></div>
+</section>
+<section style="margin-top:18px">
+<h2>Comparison · safe capacity qsafe</h2>
+<div id="cmp"></div>
+</section>
+<section style="margin-top:18px">
+<h2>Section &amp; factors</h2>
+<div id="sec"></div>
+</section>
+<section style="margin-top:18px">
+<h2>Formulae used</h2>
+<div class="f">qu = c·Nc·sc + q·Nq + 0.5·γ·B·Nγ·sγ</div>
+<ul>
+<li>q = γ·Df (adjusted if the water table is within the influence zone)</li>
+<li>Strip: sc = sγ = 1. Square: sc = 1.3, sγ = 0.8. Rectangle: sc = 1 + 0.3B/L, sγ = 1 − 0.2B/L</li>
+<li>Local shear: c′ = ⅔c and tan φ′ = ⅔ tan φ</li>
+<li>Net safe capacity: qnet,safe = (qu − q)/FS, and qsafe = qnet,safe + q</li>
+</ul>
+</section>
+</div>
+</main>
+<script>
+const G=9.81, W=9.81;
+const T=[[0,5.7,1,0],[5,7.3,1.6,.5],[10,9.6,2.7,1.2],[15,12.9,4.4,2.5],[20,17.7,7.4,5],[25,25.1,12.7,9.7],[30,37.2,22.5,19.7],[35,57.8,41.4,42.4],[40,95.7,81.3,100.4],[45,172.3,173.3,297.5],[50,347.5,415.1,1153.2]];
+function factors(p){
+  p=Math.max(0,Math.min(50,p));
+  for(let i=0;i<T.length-1;i++){
+    const a=T[i],b=T[i+1];
+    if(p>=a[0]&&p<=b[0]){const t=(p-a[0])/(b[0]-a[0]);
+      return [1,2,3].map(k=>a[k]+t*(b[k]-a[k]));}
+  }
+  return T[T.length-1].slice(1);
+}
+const v=id=>{const x=document.getElementById(id).value;return x===''?NaN:parseFloat(x)};
+function run(local,o){
+  let ce=o.c,pe=o.phi;
+  if(local){ce=2/3*o.c;pe=Math.atan(2/3*Math.tan(o.phi*Math.PI/180))*180/Math.PI;}
+  let [Nc,Nq,Ng]=factors(pe),custom=false;
+  if(o.ov.every(x=>!isNaN(x))){[Nc,Nq,Ng]=o.ov;custom=true;}
+  let sc=1,sg=1,shape='Strip';
+  if(!isNaN(o.L)&&o.L>0){ if(Math.abs(o.L-o.B)<1e-9){sc=1.3;sg=0.8;shape='Square';} else {sc=1+0.3*o.B/o.L;sg=1-0.2*o.B/o.L;shape='Rectangular';} }
+  const gs=o.g-W; let q=o.g*o.Df,gB=o.g,wt='Not within influence zone';
+  if(!isNaN(o.dw)){
+    if(o.dw<=o.Df){q=o.g*o.dw+gs*(o.Df-o.dw);gB=gs;wt='Above/at founding level';}
+    else if(o.dw<o.Df+o.B){gB=gs+(o.dw-o.Df)/o.B*(o.g-gs);wt='Within B below founding level';}
+  }
+  const qu=ce*Nc*sc+q*Nq+0.5*gB*o.B*Ng*sg;
+  return {qu,qs:(qu-q)/o.fs+q,qg:qu/o.fs,qn:qu-q,q,pe,ce,Nc,Nq,Ng,sc,sg,shape,wt,gB,custom};
+}
+const f=x=>x.toFixed(2);
+const esc=t=>t.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+function calc(){
+  const out=document.getElementById('out');
+  const o={c:v('c'),phi:v('phi'),g:v('g'),fs:v('fs'),dw:v('dw'),B:v('B'),L:v('L'),Df:v('Df'),ov:[v('onc'),v('onq'),v('ong')]};
+  if(document.getElementById('usespt').checked){const N=v('spt');o.phi=27.1+0.3*N-0.00054*N*N;}
+  if([o.c,o.phi,o.g,o.fs,o.B,o.Df].some(isNaN)||o.B<=0||o.fs<=0||o.Df<0){out.innerHTML='<p class="err">Please fill every required field with valid numbers.</p>';return;}
+  const local=document.getElementById('mode').value==='l';
+  const r=run(local,o), gen=run(false,o), loc=run(true,o);
+  const t=id=>esc(document.getElementById(id).value.trim())||'—';
+  out.innerHTML=`
+  <p class="proj"><b>${t('pn')}</b> · Client: ${t('pc')} · Engineer: ${t('pe')}</p>
+  <div class="chip"><small>Ultimate bearing capacity qu (${local?'local':'general'} shear)</small><span class="big">${f(r.qu)}</span> kPa</div>
+  <div class="chip"><small>Safe bearing capacity qsafe (net method)</small><span class="big">${f(r.qs)}</span> kPa</div>
+  <table>
+  <tr><th>Item</th><th>Value</th></tr>
+  <tr><td>Gross allowable (qu / FS)</td><td>${f(r.qg)} kPa</td></tr>
+  <tr><td>Net ultimate (qu − q)</td><td>${f(r.qn)} kPa</td></tr>
+  <tr><td>Overburden q</td><td>${f(r.q)} kPa</td></tr>
+  <tr><td>φ used</td><td>${f(o.phi)}°${local?' (φ′ = '+f(r.pe)+'°)':''}</td></tr>
+  <tr><td>Water table effect</td><td>${r.wt}</td></tr>
+  </table>
+  <h2 style="margin-top:14px">Design checks</h2>
+  <ul>
+  <li>${o.Df/o.B<=1?'Df/B ≤ 1: shallow-foundation assumption holds.':'Df/B &gt; 1: Terzaghi’s shallow-footing assumption may not apply.'}</li>
+  <li>Settlement (elastic and consolidation) must be checked separately.</li>
+  <li>Confirm with a plate load test (IS 1888 / ASTM D1194) before final foundation placement.</li>
+  </ul>`;
+  // comparison
+  const mx=Math.max(gen.qs,loc.qs)||1, bw=x=>Math.max(2,x/mx*200);
+  document.getElementById('cmp').innerHTML=`
+  <svg viewBox="0 0 340 90" width="100%" role="img" aria-label="Comparison of qsafe">
+  <text x="0" y="22">General</text><rect class="bar" x="62" y="10" width="${bw(gen.qs)}" height="18" rx="3"/><text x="${66+bw(gen.qs)}" y="23">${f(gen.qs)}</text>
+  <text x="0" y="62">Local</text><rect class="bar2" x="62" y="50" width="${bw(loc.qs)}" height="18" rx="3"/><text x="${66+bw(loc.qs)}" y="63">${f(loc.qs)}</text>
+  </svg>
+  <table><tr><th>Case</th><th>qu (kPa)</th><th>qsafe (kPa)</th></tr>
+  <tr><td>General shear</td><td>${f(gen.qu)}</td><td>${f(gen.qs)}</td></tr>
+  <tr><td>Local shear</td><td>${f(loc.qu)}</td><td>${f(loc.qs)}</td></tr></table>
+  <p class="note">Local shear gives ${f((1-loc.qs/gen.qs)*100)}% lower safe capacity.</p>`;
+  // section drawing
+  const D=Math.max(o.Df+1.5*o.B,isNaN(o.dw)?0:o.dw+0.5*o.B), s=Math.min(120/D,150/o.B), y0=40, x0=160;
+  const fy=y0+o.Df*s, fw=o.B*s, wy=y0+o.dw*s;
+  const wline=(!isNaN(o.dw)&&wy<y0+130)?`<line x1="20" x2="300" y1="${wy}" y2="${wy}" stroke="#3b82c4" stroke-dasharray="5 3"/><text x="22" y="${wy-3}" fill="#3b82c4">WT, Dw = ${o.dw} m</text>`:'';
+  document.getElementById('sec').innerHTML=`
+  <svg viewBox="0 0 320 190" width="100%" role="img" aria-label="Footing section">
+  <rect class="soil" x="20" y="${y0}" width="280" height="130"/>
+  <line x1="20" x2="300" y1="${y0}" y2="${y0}" stroke="currentColor"/><text x="22" y="${y0-6}">Ground level</text>
+  ${wline}
+  <rect class="ftg" x="${x0-fw/2}" y="${fy-10}" width="${fw}" height="10"/>
+  <line x1="${x0-fw/2}" x2="${x0+fw/2}" y1="${fy+14}" y2="${fy+14}" stroke="currentColor"/><text x="${x0-18}" y="${fy+27}">B = ${o.B} m</text>
+  <line x1="${x0+fw/2+12}" x2="${x0+fw/2+12}" y1="${y0}" y2="${fy}" stroke="currentColor"/><text x="${x0+fw/2+16}" y="${(y0+fy)/2+4}">Df = ${o.Df} m</text>
+  </svg>
+  <table><tr><th>Factor</th><th>Value</th><th>Factor</th><th>Value</th></tr>
+  <tr><td>Nc</td><td>${f(r.Nc)}</td><td>sc</td><td>${f(r.sc)}</td></tr>
+  <tr><td>Nq</td><td>${f(r.Nq)}</td><td>sγ</td><td>${f(r.sg)}</td></tr>
+  <tr><td>Nγ</td><td>${f(r.Ng)}</td><td>γ used (kN/m³)</td><td>${f(r.gB)}</td></tr>
+  <tr><td>c used (kPa)</td><td>${f(r.ce)}</td><td>Shape</td><td>${r.shape}</td></tr></table>
+  ${r.custom?'<p class="note">Custom Nc, Nq, Nγ values are in use.</p>':''}`;
+}
+calc();
+</script>
+</body>
+</html>
